@@ -17,7 +17,7 @@ app = Flask(__name__) # create flask app
 def example_py():
   return "example response from python"
 
-fastflask.link(app) # link app to fastfalsk
+fastflask.link(app) # link app to fastflask
 fastflask.start("server.exe") # start the server and link to c++ executable
 ```
 
