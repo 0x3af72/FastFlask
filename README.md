@@ -29,9 +29,13 @@ In server.cpp:
 #include "fastflask.hpp"
 
 int main(){
+
+    // create a c++ route
     ff::add_route("/example_cpp/", ff::GET, [](json j){
         return ff::RES("", "example response from c++");
     });
+    
+    // start the server. running this code by itself without calling from python does nothing.
     ff::start();
 }
 ```
