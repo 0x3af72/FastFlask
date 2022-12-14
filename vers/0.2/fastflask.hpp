@@ -1,0 +1,121 @@
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <windows.h>
+#include <functional>
+#include <filesystem>
+#include <unordered_map>
+
+#include "nlohmann_json.hpp"
+
+using json = nlohmann::json;
+
+// suffix function
+bool string_ends_with(std::string f, std::string s){
+    if (s.size() > f.size()) return false;
+    return (f.substr(f.size() - s.size(), s.size()) == s);
+}
+
+namespace ff{
+
+// response object
+struct RES{
+    std::string to_exec, to_return;
+    int code = 200;
+    RES(std::string to_exec, std::string to_return): to_exec(to_exec), to_return(to_return){}
+};
+
+// routes data
+enum REQ_TYPE{
+    GET, POST
+};
+std::unordered_map<std::string, REQ_TYPE> m_to_rt = {{"GET", GET}, {"POST", POST}};
+std::unordered_map<std::string, std::unordered_map<REQ_TYPE, std::function<RES(json)>>> routes;
+void add_route(std::string url_path, REQ_TYPE type, std::function<RES(json)> func){
+    routes[url_path][type] = func;
+    if (url_path[url_path.size() - 1] != '/'){
+        routes[url_path + "/"][type] = func;
+    } else {
+        routes[url_path.substr(0, url_path.size() - 1)][type] = func;
+    }
+}
+
+void get_response(std::string rid, std::string url_path, std::string method, std::string json_data){
+
+    // return a response
+    std::string to_exec, to_return;
+    if (routes.find(url_path) != routes.end()){
+        if (routes[url_path].find(m_to_rt[method]) != routes[url_path].end()){
+
+            // get function response
+            json j = json::parse(json_data == "null" ? "{\"json\": false}" : json_data);
+            RES r = routes[url_path][m_to_rt[method]](j);
+            to_exec = r.to_exec; to_return = r.to_return;
+        }
+    } else {
+        // error
+        to_exec = "resp.status = 404";
+        to_return = "<h1>404 Not Found</h1><h4>(Fastflask): Invalid url route, or request method.</h4>" + url_path;
+    }
+
+    // write to exec and return files and exit function
+    std::ofstream rq_w; rq_w.open(".requests/" + rid + "-exec.rq");
+    rq_w << to_exec; rq_w.close();
+    std::ofstream rq_w_return; rq_w_return.open(".requests/" + rid + "-return.rq");
+    rq_w_return << to_return; rq_w_return.close();
+}
+
+void start(float sleep_dur = 0){
+
+    // debug message
+    std::cout << "[FASTFLASK] Server started.\n";
+
+    // data that we will get from fastflask.py
+    std::string url_path, method, json_data;
+
+    while (true){
+
+        // find all unanswered requests
+        for (auto file: std::filesystem::directory_iterator(".requests")){
+
+            // grab filepath
+            std::string file_path = file.path().string();
+
+            // ignore return files and json
+            if (string_ends_with(file_path, "-exec.rq") || string_ends_with(file_path, "-return.rq") || string_ends_with(file_path, "-json.rq")){
+                continue;
+            }
+
+            // get request data
+            // note: no need to wait for file to finish writing for some reason
+            std::string rid = file_path.substr(std::string(".requests/").size(), file_path.size() - std::string(".rq").size() - std::string(".requests/").size());
+            std::ifstream rq_r; rq_r.open(file_path);
+            std::getline(rq_r, url_path); std::getline(rq_r, method);
+            rq_r.close();
+
+            // json
+            std::ifstream rq_r_json; rq_r_json.open(".requests/" + rid + "-json.rq");
+            std::string tmp;
+            json_data = "";
+            while (std::getline(rq_r_json, tmp)){
+                json_data += tmp;
+            }
+            rq_r_json.close();
+
+            // delete files
+            std::filesystem::remove(file_path);
+            std::filesystem::remove(".requests/" + rid + "-json.rq");
+
+            // new thread to return response
+            std::thread resp_thread(get_response, rid, url_path, method, json_data);
+            resp_thread.detach();
+        }
+
+        Sleep(sleep_dur); // incase user for some reason doesnt want high cpu usage
+    }
+}
+
+}
