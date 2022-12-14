@@ -3,6 +3,8 @@ A python module to link a C++ backend to flask.
 
 ## Usage
 
+Compile `server.cpp`, then run `server.py`.
+
 In server.py:
 
 ```py
