@@ -31,8 +31,15 @@ In server.cpp:
 int main(){
 
     // create a c++ route
-    ff::add_route("/example_cpp/", ff::GET, [](json j){
+    ff::add_route("/example_cpp/", ff::GET, [](json j, json dynamic_vals){
         return ff::RES("", "example response from c++");
+    });
+    
+    // a dynamic route. it works like how it would in vanilla flask.
+    // dynamic_vals contain the values substituted into the dynamic url.
+    ff::add_route("/users/<username>/", ff::GET, [](json j, json dynamic_vals){
+        std::string template_file = std::string(dynamic_vals["username"]) + ".html";
+        return ff::RES("", "render_template('" + template_file + "')");
     });
     
     // start the server. running this code by itself without calling from python does nothing.
