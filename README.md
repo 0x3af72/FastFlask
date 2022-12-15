@@ -46,7 +46,7 @@ int main(){
     // a dynamic route. it works like how it would in vanilla flask.
     // dynamic_vals contain the values substituted into the dynamic url.
     // you can also use flask's render_template function from the c++ backend and this function demonstrates how.
-    ff::add_route("/users/<username>/", ff::GET, [](json j, json dynamic_vals){
+    ff::add_route("/users/<username>/", ff::GET, [](json j, json headers, json dynamic_vals){
         std::string template_file = std::string(dynamic_vals["username"]) + ".html";
         return ff::RES("", "render_template('" + template_file + "')");
     });
