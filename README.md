@@ -1,6 +1,12 @@
 # FastFlask
 A python module to link a C++ backend to flask.
 
+## Dependencies
+
+Dependencies: flask, gevent
+
+Use `pip install dependency_name` to install dependencies.
+
 ## Usage
 
 Compile `server.cpp`, then run `server.py`.
