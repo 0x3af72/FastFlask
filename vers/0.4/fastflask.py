@@ -11,13 +11,13 @@ import time
 app = None
 TIMEOUT = 2 # timeout 10 seconds
 
-def getAPIResponse(url_path, method, json_data):
+def getAPIResponse(url_path, method, json_data, json_headers):
 
     rid = str(uuid.uuid4())
 
     # write to files
     with open(f".requests/{rid}.rq", "w") as rq_w:
-        rq_w.write(f"{url_path}\n{method}\n{json_data}\n")
+        rq_w.write(f"{url_path}\n{method}\n{json_data}\n{json_headers}")
     with open(f".requests/{rid}-complete.rq", "w") as rq_w:
         pass # just a simple flag to indicate write is complete
 
@@ -27,7 +27,7 @@ def getAPIResponse(url_path, method, json_data):
 
         # timeout
         if time.time() - start_time >= TIMEOUT:
-            return "resp.status = 408", f"<h1>Timeout</h1><p>Request timed out after {TIMEOUT} seconds.</p>"
+            return "resp.status = 408", f"<h1>Timeout</h1><p>Request timed out after {TIMEOUT} seconds.</p><br><i>this speedy server is powered by fastflask.</i>"
 
         # check if result has been written
         req_folder = os.listdir(".requests")
@@ -77,7 +77,7 @@ def start(exe_path, host="127.0.0.1", port=5000):
             json_data = json.dumps(request.json)
         to_exec, to_return = getAPIResponse(
             request.path + ("/" if request.path[-1] != "/" else ""),
-            request.method, json_data
+            request.method, json_data, json.dumps(dict(request.headers)),
         )
         exec(to_exec)
         if to_return.startswith("render_template"):

@@ -57,15 +57,18 @@ enum REQ_TYPE{
     GET, POST
 };
 std::unordered_map<std::string, REQ_TYPE> m_to_rt = {{"GET", GET}, {"POST", POST}};
-std::unordered_map<std::string, std::unordered_map<REQ_TYPE, std::function<RES(json, json)>>> routes;
-void add_route(std::string url_path, REQ_TYPE type, std::function<RES(json, json)> func){
+std::unordered_map<std::string, std::unordered_map<REQ_TYPE, std::function<RES(json, json, json)>>> routes;
+void add_route(std::string url_path, REQ_TYPE type, std::function<RES(json, json, json)> func){
     routes[url_path][type] = func;
     if (url_path[url_path.size() - 1] != '/'){
         routes[url_path + "/"][type] = func;
     }
 }
 
-void get_response(std::string rid, std::string url_path, std::string method, std::string json_data){
+void get_response(
+    std::string rid, std::string url_path, std::string method,
+    std::string json_data, std::string json_headers
+){
 
     // match url path
     bool route_exists = false;
@@ -113,14 +116,14 @@ void get_response(std::string rid, std::string url_path, std::string method, std
     if (route_exists){
         if (routes[matched_route].find(m_to_rt[method]) != routes[matched_route].end()){
             // get function response
-            json j = json::parse(json_data);
-            RES r = routes[matched_route][m_to_rt[method]](j, dynamic_vals);
+            json j = json::parse(json_data); json j_headers = json::parse(json_headers);
+            RES r = routes[matched_route][m_to_rt[method]](j, j_headers, dynamic_vals);
             to_exec = r.to_exec; to_return = r.to_return;
         }
     } else {
         // error
         to_exec = "resp.status = 404";
-        to_return = "<h1>404 Not Found</h1><h4>(Fastflask): Invalid url route, or request method.</h4>" + url_path;
+        to_return = "<h1>404 Not Found</h1><h4>Invalid url route, or request method.</h4>" + url_path + "<br><i>this speedy server is powered by fastflask.</i>";
     }
 
     // write to exec and return files and exit function
@@ -136,7 +139,7 @@ void start(float sleep_dur = 0){
     std::cout << "[FASTFLASK] Server started.\n";
 
     // data that we will get from fastflask.py
-    std::string url_path, method, json_data;
+    std::string url_path, method, json_data, json_headers;
 
     while (true){
 
@@ -155,7 +158,8 @@ void start(float sleep_dur = 0){
             // get request data
             std::string rid = file_path.substr(std::string(".requests/").size(), file_path.size() - std::string(".rq").size() - std::string(".requests/").size());
             std::ifstream rq_r; rq_r.open(file_path);
-            std::getline(rq_r, url_path); std::getline(rq_r, method); std::getline(rq_r, json_data);
+            std::getline(rq_r, url_path); std::getline(rq_r, method);
+            std::getline(rq_r, json_data); std::getline(rq_r, json_headers);
             rq_r.close();
 
             // delete files
@@ -163,7 +167,7 @@ void start(float sleep_dur = 0){
             remove((".requests/" + rid + "-complete.rq").c_str());
 
             // new thread to return response
-            std::thread resp_thread(get_response, rid, url_path, method, json_data);
+            std::thread resp_thread(get_response, rid, url_path, method, json_data, json_headers);
             resp_thread.detach();
         }
 
