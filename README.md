@@ -26,7 +26,7 @@ def example_py():
   return "example response from python"
 
 fastflask.link(app) # link app to fastflask
-fastflask.start("server.exe") # start the server and link to c++ executable
+fastflask.start("server.exe") # start the server and link to c++ executable. kwargs are: (host: str, port: int)
 ```
 
 In server.cpp:
