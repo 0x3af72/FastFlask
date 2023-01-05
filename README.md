@@ -23,7 +23,7 @@ app = Flask(__name__) # create flask app
 # create a python route
 @app.route("/example_py/", methods=["GET"])
 def example_py():
-  return "example response from python"
+    return "example response from python"
 
 fastflask.link(app) # link app to fastflask
 fastflask.start("server.exe") # start the server and link to c++ executable. kwargs are: (host: str, port: int)
