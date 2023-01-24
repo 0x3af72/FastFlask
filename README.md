@@ -39,14 +39,14 @@ In server.cpp:
 int main(){
 
     // create a c++ route
-    ff::add_route("/example_cpp/", ff::GET, [](json j, json dynamic_vals){
+    ff::add_route("/example_cpp/", ff::GET, [](json j, json headers, json dynamic_vals){
         return ff::RES("", "example response from c++");
     });
     
     // a dynamic route. it works like how it would in vanilla flask.
     // 'dynamic_vals' contain the values substituted into the dynamic url.
     ff::add_route("/users/<username>/", ff::GET, [](json j, json headers, json dynamic_vals){
-        return ff::RES("", "hello, " + dynamic_vals["username"] + "!");
+        return ff::RES("", "hello, " + std::string(dynamic_vals["username"]) + "!");
     });
     
     // you can also use flask's render_template function from the c++ backend and this function demonstrates how.
