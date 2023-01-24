@@ -1,5 +1,5 @@
 # FastFlask
-A python module to link a C++ backend to flask.
+A python module for windows to link a C++ backend to flask.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ def example_py():
     return "example response from python"
 
 fastflask.link(app) # link app to fastflask
-fastflask.start("server.exe") # start the server and link to c++ executable. kwargs are: (host: str, port: int)
+fastflask.start("server.exe") # start the server and link to c++ executable. kwargs: (host: str, port: int), defaults to 127.0.0.1 and 5000
 ```
 
 In server.cpp:
