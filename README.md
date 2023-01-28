@@ -3,7 +3,7 @@ A python module for windows to link a C++ backend to flask.
 
 ## Dependencies
 
-Dependencies: flask, gevent
+Dependencies: flask, gevent, pywin32
 
 Use `pip install dependency_name` to install dependencies.
 
