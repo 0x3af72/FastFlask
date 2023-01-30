@@ -38,7 +38,7 @@ In server.cpp:
 
 int main(){
 
-    // create a c++ route
+    // create a c++ route.
     ff::add_route("/example_cpp/", ff::GET, [](json j, json headers, json dynamic_vals){
         return ff::RES("", "example response from c++");
     });
@@ -52,8 +52,19 @@ int main(){
     // you can also use flask's render_template function from the c++ backend and this function demonstrates how.
     // to modify the python RESPONSE object, use the name 'resp' in the 'to_exec' string.
     ff::add_route("/", ff::GET, [](json j, json headers, json dynamic_vals){
-        return ff::RES("resp.set_cookie('visitedbefore', 'true')", "render_template('index.html')");
+        return ff::RES("resp.set_cookie('visitedbefore', 'true')", "", "index.html");
     });
+    
+    // ff::RES takes 5 arguments: to_exec, to_return, r_template="", kwargs={}, code=200
+    ff::add_route("/test_route/", ff::GET, [](json j, json headers, json dynamic_vals){
+        return ff::RES(
+            "resp.set_cookie('cookies', 'true')", // to_exec can contain python code to be executed from the python side, such as setting cookies.
+            "", // to_return can contain data to be returned when there is no template to render.
+            "test_route.html", // r_template is optional. it can contain a template file path.
+            {{"username": "john"}}, // kwargs is optional. it can be used to pass context variables to the rendered template.
+            200 // code is optional. it is the status code returned by the server.
+        );
+    }
     
     // start the server. running this code by itself without calling from python does nothing.
     ff::start();
